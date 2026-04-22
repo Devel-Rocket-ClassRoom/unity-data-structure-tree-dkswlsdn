@@ -25,15 +25,6 @@ public class TreeGenerator : MonoBehaviour
         TreeGenerate();
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            Debug.Log("generate");
-            TreeGenerate();
-        }
-    }
-
     void TreeGenerate()
     {
         tree.Clear();
@@ -53,7 +44,6 @@ public class TreeGenerator : MonoBehaviour
             tree.Add(num, num.ToString());
         }
 
-        Debug.Log(tree.root.Height);
 
         switch (treeType)
         {
