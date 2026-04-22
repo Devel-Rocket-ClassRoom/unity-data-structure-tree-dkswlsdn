@@ -53,8 +53,7 @@ public class TreeGenerator : MonoBehaviour
             case SortType.In_Order:
                 DrawTree_InOrder(tree.root);
                 DrawTree_InOrder2(tree.root, null, tree.root.Height);
-                dict.Clear();
-                idx = 0;
+                
                 break;
             case SortType.Level_Order:
                 DrawTree_LevelOrder(tree.root, tree.root.Height);
@@ -62,6 +61,8 @@ public class TreeGenerator : MonoBehaviour
                 DrawTree_LevelOrder3(tree.root, null, tree.root.Height);
                 break;
         }
+        dict.Clear();
+        idx = 0;
     }
 
     void DrawTree_Pow(TreeNode<int, string> node, Vector3 parentPoint, NodeType type = NodeType.Mid)
