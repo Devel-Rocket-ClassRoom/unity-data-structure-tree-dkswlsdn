@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using NUnit.Framework;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using static UnityEngine.Rendering.DebugUI;
@@ -14,7 +14,7 @@ public class TreeGenerator : MonoBehaviour
     private BinarySerachTree<int, string> tree;
 
     private List<Vector3> positionList = new List<Vector3>();
-    private int idx = 0;
+    readonly int gap = 5;
 
     private void Start()
     {
@@ -53,47 +53,163 @@ public class TreeGenerator : MonoBehaviour
             tree.Add(num, num.ToString());
         }
 
-        positionList = PositionCalculator(tree.root.Height, treeType);
         Debug.Log(tree.root.Height);
-        Debug.Log(positionList.Count);
-        DrawTree_Pow(tree.root, 0);
+
+        switch (treeType)
+        {
+            case SortType.Pow:
+                DrawTree_Pow(tree.root, new Vector3(0, gap * tree.root.Height, 0));
+                break;
+            case SortType.In_Order:
+                DrawTree_InOrder(tree.root);
+                DrawTree_InOrder2(tree.root, null, tree.root.Height);
+                dict.Clear();
+                idx = 0;
+                break;
+            case SortType.Level_Order:
+                DrawTree_LevelOrder(tree.root, tree.root.Height);
+                DrawTree_LevelOrder2(tree.root);
+                DrawTree_LevelOrder3(tree.root, null, tree.root.Height);
+                break;
+        }
     }
 
-    void DrawTree_Pow(TreeNode<int, string> node, int index, NodeType type = NodeType.Mid)
+    void DrawTree_Pow(TreeNode<int, string> node, Vector3 parentPoint, NodeType type = NodeType.Mid)
     {
         if (node == null) return;
 
-        int myIdx = index;
+        int height = (int)parentPoint.y / gap - 1;
+
+
+        var currentNodePoint = parentPoint;
 
         switch (type)
         {
             case NodeType.Left:
-                myIdx = 2 * index + 1;
+                currentNodePoint = parentPoint + new Vector3(-gap * Mathf.Pow(2, height - 2), -gap, 0);
                 break;
             case NodeType.Mid:
-                myIdx = index;
+                currentNodePoint = parentPoint;
                 break;
             case NodeType.Right:
-                myIdx = 2 * index + 2;
+                currentNodePoint = parentPoint + new Vector3(gap * Mathf.Pow(2, height - 2), -gap, 0);
                 break;
         }
 
-        DrawNode(node, positionList[myIdx], positionList[index]);
+        DrawNode(node, currentNodePoint, parentPoint);
 
-        DrawTree_Pow(node.Left, myIdx, NodeType.Left);
-        DrawTree_Pow(node.Right, myIdx, NodeType.Right);
+        DrawTree_Pow(node.Left, currentNodePoint, NodeType.Left);
+        DrawTree_Pow(node.Right, currentNodePoint, NodeType.Right);
     }
 
-    void DrawTree_LevelOrder(TreeNode<int, string> node, Vector3 point, int height, NodeType type = NodeType.Mid)
+    Dictionary<TreeNode<int, string>, int> dict = new Dictionary<TreeNode<int, string>, int>();
+    private int idx = 0;
+    void DrawTree_InOrder(TreeNode<int, string> node)
     {
         if (node == null) return;
-        int gap = 5;
 
+
+        DrawTree_InOrder(node.Left);
+
+        dict.Add(node, idx++);
+
+        DrawTree_InOrder(node.Right);
     }
 
-    void DrawNode(TreeNode<int, string> node, Vector3 point, Vector3 parentPoint, SortType type = SortType.Pow)
+    TreeNode<int, string> DrawTree_InOrder2(TreeNode<int, string> node, TreeNode<int, string> parent, int level)
+    {
+        if (node == null) return null;
+
+        if (node.Left != null)
+        {
+            DrawTree_InOrder2(node.Left, node, level - 1);
+        }
+
+        Vector3 nodePoint = new Vector3(dict[node] * gap, level * gap, 0);
+        Vector3 parentNodePoint = parent != null ? new Vector3(dict[parent] * gap, (level + 1) * gap, 0) : nodePoint;
+        DrawNode(node, nodePoint, parentNodePoint);
+
+        if (node.Right != null)
+        {
+            DrawTree_InOrder2(node.Right, node, level - 1);
+        }
+
+        
+        return node;
+    }
+
+
+
+    void DrawTree_LevelOrder(TreeNode<int, string> node, int level)
     {
         if (node == null) return;
+
+        dict.Add(node, level);
+
+        if (node.Left != null)
+        {
+            DrawTree_LevelOrder(node.Left, level - 1);
+        }
+        if (node.Right != null)
+        {
+            DrawTree_LevelOrder(node.Right, level - 1);
+        }
+    }
+    void DrawTree_LevelOrder2(TreeNode<int, string> node)
+    {
+        Dictionary<TreeNode<int, string>, int> d = new Dictionary<TreeNode<int, string>, int>(dict);
+        int height = node.Height;
+        while (height > 0)
+        {
+            List<TreeNode<int, string>> list = new List<TreeNode<int, string>>();
+
+            foreach (var n in d)
+            {
+                if (d[n.Key] == height)
+                {
+                    list.Add(n.Key);
+                }
+            }
+
+            list.Sort((x, y) => x.Key.CompareTo(y.Key));
+
+            int x = 0;
+            for (int i = 0; i < list.Count; i++)
+            {
+                dict[list[i]] = x++;
+            }
+
+            height--;
+        }
+    }
+    TreeNode<int, string> DrawTree_LevelOrder3(TreeNode<int, string> node, TreeNode<int, string> parent, int level)
+    {
+        if (node == null) return null;
+
+        Vector3 nodePoint = new Vector3(dict[node] * gap, level * gap, 0);
+        Vector3 parentNodePoint = parent != null ? new Vector3(dict[parent] * gap, (level + 1) * gap, 0) : nodePoint;
+        DrawNode(node, nodePoint, parentNodePoint);
+
+        if (node.Left != null)
+        {
+            DrawTree_LevelOrder3(node.Left, node, level - 1);
+        }
+
+        if (node.Right != null)
+        {
+            DrawTree_LevelOrder3(node.Right, node, level - 1);
+        }
+
+        return node;
+    }
+
+
+
+
+    void DrawNode(TreeNode<int, string> node, Vector3 point, Vector3 drawLinePoint)
+    {
+        if (node == null) return;
+        if (node.Equals(drawLinePoint)) return;
 
         var n = Instantiate(nodePrefab);
         n.transform.position = point;
@@ -101,7 +217,7 @@ public class TreeGenerator : MonoBehaviour
         nod.Key = node.Key;
         nod.Height = node.Height;
 
-        DrawLine(point, parentPoint, n.GetComponent<LineRenderer>());
+        DrawLine(point, drawLinePoint, n.GetComponent<LineRenderer>());
     }
 
     void DrawLine(Vector3 a, Vector3 b, LineRenderer renderer)
@@ -112,59 +228,7 @@ public class TreeGenerator : MonoBehaviour
     }
 
 
-    List<Vector3> PositionCalculator(int rootHeight, SortType type)
-    {
-        List<Vector3> list = new List<Vector3>();
-
-        for (int i = 0; i < rootHeight; i++)
-        {
-            int allNodeCount = (int)Mathf.Pow(2, i);
-            float yPos = (rootHeight - i) * 5;
-
-            float gap = 0;
-            float levelWidth = 0;
-            float startX = 0;
-
-            switch (type)
-            {
-                case SortType.Pow:
-                    gap = Mathf.Pow(2, rootHeight - i);
-                    levelWidth = (allNodeCount - 1) * gap;
-                    startX = -levelWidth / 2f;
-
-                    for (int j = 0; j < allNodeCount; j++)
-                    {
-                        float xPos = startX + (j * gap);
-                        list.Add(new Vector3(xPos, yPos, 0));
-                    }
-                    break;
-                case SortType.In_Order:
-                    gap = Mathf.Pow(2, rootHeight - i);
-                    levelWidth = (allNodeCount - 1) * gap;
-                    startX = -levelWidth / 2f;
-
-                    for (int j = 0; j < allNodeCount; j++)
-                    {
-                        float xPos = startX + (j * gap);
-                        list.Add(new Vector3(xPos, yPos, 0));
-                    }
-                    break;
-                case SortType.Level_Order:
-                    gap = 5;
-                    startX = 0;
-
-                    for (int j = 0; j < allNodeCount; j++)
-                    {
-                        float xPos = startX + (j * gap);
-                        list.Add(new Vector3(xPos, yPos, 0));
-                    }
-                    break;
-            }
-        }
-
-        return list;
-    }
-
+    
 
     public enum SortType
     {
