@@ -57,42 +57,25 @@ public class PriorityQueue<TElement, TPriority>
 
         while (idx < queue.Count - 1)
         {
-            int childIdx = 0;
+            int minIdx = idx;
 
-            if (LeftChild(idx) < queue.Count && LeftChild(idx) + 1 < queue.Count)
+            if (LeftChild(idx) < queue.Count && Comparer<TPriority>.Default.Compare(queue[LeftChild(idx)].p, queue[minIdx].p) < 0)
             {
-                if (Comparer<TPriority>.Default.Compare(queue[LeftChild(idx)].p, queue[LeftChild(idx) + 1].p) > 0)
-                {
-                    childIdx = LeftChild(idx) + 1;
-                }
-                else
-                {
-                    childIdx = LeftChild(idx);
-                }
+                minIdx = LeftChild(idx);
             }
-            else if (LeftChild(idx) < queue.Count && LeftChild(idx) + 1 >= queue.Count)
+            if (LeftChild(idx) + 1 < queue.Count && Comparer<TPriority>.Default.Compare(queue[LeftChild(idx) + 1].p, queue[minIdx].p) < 0)
             {
-                childIdx = LeftChild(idx);
-            }
-            else if (LeftChild(idx) >= queue.Count && LeftChild(idx) + 1 < queue.Count)
-            {
-                childIdx = LeftChild(idx) + 1;
-            }
-            else
-            {
-                break;
+                minIdx = LeftChild(idx) + 1;
             }
 
-            if (Comparer<TPriority>.Default.Compare(queue[idx].p, queue[childIdx].p) > 0)
+            if (minIdx == idx) break;
+
+            if (Comparer<TPriority>.Default.Compare(queue[idx].p, queue[minIdx].p) > 0)
             {
                 var t = queue[idx];
-                queue[idx] = queue[childIdx];
-                queue[childIdx] = t;
-                idx = childIdx;
-            }
-            else
-            {
-                break;
+                queue[idx] = queue[minIdx];
+                queue[minIdx] = t;
+                idx = minIdx;
             }
         }
 
