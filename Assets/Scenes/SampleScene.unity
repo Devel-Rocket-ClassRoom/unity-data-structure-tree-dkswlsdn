@@ -489,9 +489,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f263f11cfabc8414eb9c0c3a4a09dac2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TreeGenerator
-  treeType: 0
+  treeType: 2
   nodePrefab: {fileID: 4625463969025400388, guid: 6687d4f762fde1343b4a0e953aae7bff, type: 3}
-  nodeCount: 10
+  nodeCount: 100
 --- !u!1 &1652958813
 GameObject:
   m_ObjectHideFlags: 0
