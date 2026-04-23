@@ -1,12 +1,30 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Text;
+using System;
 
 public class PriorityQueue<TElement, TPriority>
 {
-    private List<(TElement e, TPriority p)> queue = new List<(TElement e, TPriority p)>();
+    private List<(TElement e, TPriority p)> queue;
+    private Comparer<TPriority> comparer;
 
     public int Count { get { return queue.Count; } }
+
+
+
+    public PriorityQueue()
+    {
+        queue = new List<(TElement e, TPriority p)>();
+        comparer = Comparer<TPriority>.Default;
+    }
+
+    public PriorityQueue(Comparer<TPriority> comparer)
+    {
+        queue = new List<(TElement e, TPriority p)>();
+        this.comparer = comparer;
+    }
+
+
 
     public void Enqueue(TElement element, TPriority priority)
     {
@@ -15,7 +33,7 @@ public class PriorityQueue<TElement, TPriority>
 
         while (idx > 0)
         {
-            int compare = Comparer<TPriority>.Default.Compare(queue[idx].p, queue[Parent(idx)].p);
+            int compare = comparer.Compare(queue[idx].p, queue[Parent(idx)].p);
 
             if (compare < 0)
             {
@@ -23,12 +41,6 @@ public class PriorityQueue<TElement, TPriority>
                 queue[idx] = queue[Parent(idx)];
                 queue[Parent(idx)] = temp;
                 idx = (Parent(idx));
-            }
-            else if (compare == 0)
-            {
-                queue[Parent(idx)] = queue[idx];
-                queue.RemoveAt(idx);
-                return;
             }
             else
             {
@@ -40,8 +52,7 @@ public class PriorityQueue<TElement, TPriority>
     {
         if (queue.Count == 0)
         {
-            Debug.Log("아무것도 없음");
-            
+            throw new InvalidOperationException("큐 비어있음");
         }
 
         var result = queue[0];
@@ -59,18 +70,18 @@ public class PriorityQueue<TElement, TPriority>
         {
             int minIdx = idx;
 
-            if (LeftChild(idx) < queue.Count && Comparer<TPriority>.Default.Compare(queue[LeftChild(idx)].p, queue[minIdx].p) < 0)
+            if (LeftChild(idx) < queue.Count && comparer.Compare(queue[LeftChild(idx)].p, queue[minIdx].p) < 0)
             {
                 minIdx = LeftChild(idx);
             }
-            if (LeftChild(idx) + 1 < queue.Count && Comparer<TPriority>.Default.Compare(queue[LeftChild(idx) + 1].p, queue[minIdx].p) < 0)
+            if (LeftChild(idx) + 1 < queue.Count && comparer.Compare(queue[LeftChild(idx) + 1].p, queue[minIdx].p) < 0)
             {
                 minIdx = LeftChild(idx) + 1;
             }
 
             if (minIdx == idx) break;
 
-            if (Comparer<TPriority>.Default.Compare(queue[idx].p, queue[minIdx].p) > 0)
+            if (comparer.Compare(queue[idx].p, queue[minIdx].p) > 0)
             {
                 var t = queue[idx];
                 queue[idx] = queue[minIdx];
@@ -83,6 +94,11 @@ public class PriorityQueue<TElement, TPriority>
     }
     public TElement Peek()
     {
+        if (queue.Count == 0)
+        {
+            throw new InvalidOperationException("큐 비어있음");
+        }
+
         return queue[0].e;
     }
     public void Clear()
